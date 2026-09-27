@@ -1,0 +1,36 @@
+clc;
+clear;
+close all;
+
+load('DR_Model_ResNet18.mat')
+
+imds = imageDatastore( ...
+    "Diabetic_Retinopathy_Dataset", ...
+    "IncludeSubfolders", true, ...
+    "LabelSource", "foldernames");
+
+[~,~,imdsTest] = splitEachLabel( ...
+    imds,...
+    0.7,...
+    0.15,...
+    0.15,...
+    "randomized");
+
+inputSize = trainedNet.Layers(1).InputSize;
+
+augTest = augmentedImageDatastore( ...
+    inputSize(1:2), ...
+    imdsTest);
+
+YPred = classify(trainedNet,augTest);
+
+YTest = imdsTest.Labels;
+
+accuracy = mean(YPred == YTest);
+
+fprintf("Test Accuracy = %.2f %%\n", ...
+    accuracy*100);
+
+figure
+confusionchart(YTest,YPred)
+title("DR Classification Confusion Matrix")
